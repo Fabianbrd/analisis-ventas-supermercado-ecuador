@@ -146,7 +146,7 @@ Requisitos: Python 3.10 o superior.
 
 ```bash
 # 1. Clonar el repositorio
-git clone <url-del-repositorio>
+git clone git clone https://github.com/Fabianbrd/analisis-ventas-supermercado-ecuador.git
 cd analisis-ventas-supermercado-ecuador
 
 # 2. Crear y activar un entorno virtual
