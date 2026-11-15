@@ -3,7 +3,7 @@
 Análisis exploratorio de **más de 3 millones de registros de ventas diarias** de Corporación Favorita, una de las
 cadenas de supermercados más grandes de Ecuador (54 tiendas, 33 familias de productos, enero 2013 – agosto 2017).
 
-**Herramientas:** Python · pandas · matplotlib · seaborn · Jupyter
+**Herramientas:** Python · pandas · matplotlib · seaborn · Jupyter · SQL (SQLite)
 
 ---
 
@@ -47,11 +47,19 @@ cd data/raw && unzip store-sales-time-series-forecasting.zip
 ```
 ├── data/
 │   ├── raw/          # CSV originales de Kaggle (no se suben a GitHub)
-│   └── processed/    # Tablas limpias generadas por el notebook 01
+│   ├── processed/    # Tablas limpias generadas por el notebook 01
+│   └── ventas.db     # Base SQLite generada por sql/00_cargar_datos.py (no se sube a GitHub)
 ├── notebooks/
 │   ├── 01_exploracion_y_limpieza.ipynb   # Calidad de datos, feriados, tablas procesadas
 │   └── 02_preguntas_de_negocio.ipynb     # Respuesta a las 5 preguntas, paso a paso
-├── sql/              # Consultas SQL (próximo paso del proyecto)
+├── sql/
+│   ├── 00_cargar_datos.py                # Carga los CSV de data/raw en data/ventas.db
+│   ├── ejecutar_consulta.py              # Ejecuta un archivo .sql y muestra los resultados
+│   ├── 01_evolucion_y_estacionalidad.sql # Pregunta 1
+│   ├── 02_familias_de_producto.sql       # Pregunta 2
+│   ├── 03_tiendas_y_ciudades.sql         # Pregunta 3
+│   ├── 04_promociones.sql                # Pregunta 4
+│   └── 05_feriados_petroleo_terremoto.sql # Pregunta 5
 ├── images/           # Gráficos exportados por los notebooks
 ├── reports/          # Resumen ejecutivo de hallazgos
 ├── requirements.txt
@@ -76,6 +84,10 @@ cd data/raw && unzip store-sales-time-series-forecasting.zip
    - **Efecto de los feriados:** cada día se compara con la mediana de los días normales del mismo día de la semana,
      mes y año.
    - **Petróleo:** se correlacionan los *cambios* y no los niveles, para evitar correlaciones espurias.
+3. **Réplica en SQL** (carpeta `sql/`)
+   - Las 5 preguntas se responden también con consultas SQL sobre una base **SQLite**, partiendo de los CSV
+     originales y aplicando las mismas reglas: periodo confiable, 20 familias completas y reglas de feriados.
+   - Los resultados coinciden con los del notebook `02`.
 
 ## 📊 Hallazgos principales
 
@@ -165,8 +177,32 @@ jupyter lab
 
 El notebook `01` genera los archivos de `data/processed/` que usa el notebook `02`.
 
+## 🗄️ Consultas SQL
+
+La carpeta `sql/` responde las mismas 5 preguntas con SQL. Usa **SQLite** a través del módulo `sqlite3`, que
+viene incluido con Python: no hace falta instalar nada más. Las consultas leen los datos originales de
+`data/raw/`, no los del notebook `01`.
+
+```bash
+# Con el entorno virtual activado y los CSV en data/raw/:
+
+# 1. Crear la base de datos data/ventas.db (unos 20 segundos, ~365 MB)
+python sql/00_cargar_datos.py
+
+# 2. Ejecutar la consulta de una pregunta
+python sql/ejecutar_consulta.py sql/01_evolucion_y_estacionalidad.sql
+```
+
+- `00_cargar_datos.py` crea una tabla por cada CSV (`train`, `stores`, `oil`, `holidays_events`,
+  `transactions`) con sus índices. La base queda en `data/`, que está en `.gitignore`, así que no se sube a GitHub.
+- Cada archivo `.sql` tiene comentarios en español que explican cada paso y aplica las mismas decisiones que los
+  notebooks: el **periodo confiable** (desde junio de 2015), las **20 familias completas** para las tendencias
+  largas y las **reglas de feriados trasladados**.
+- Las tablas intermedias se crean como `TEMP TABLE`: solo existen durante la ejecución y no modifican la base.
+- Los archivos `.sql` también se pueden abrir en un editor visual como
+  [DB Browser for SQLite](https://sqlitebrowser.org/): se conecta a `data/ventas.db` y se ejecuta el archivo completo.
+
 ## 🚀 Próximos pasos
 
-- Replicar las consultas principales en **SQL** (carpeta `sql/`).
 - Construir un **dashboard** (Power BI / Tableau / Looker Studio) con los indicadores clave.
 - Entrenar un **modelo de predicción** de ventas usando los feriados por tienda ya preparados.
