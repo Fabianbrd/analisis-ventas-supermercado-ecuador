@@ -1,0 +1,10 @@
+# Datos (se descargan desde Kaggle, no se suben al repositorio)
+data/
+
+# Entorno virtual de Python
+.venv/
+
+# Archivos temporales de Python y Jupyter
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
